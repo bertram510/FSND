@@ -8,6 +8,7 @@
 		</h1>
 		<p class="subtitle">
 			ID: {{ venue.id }}
+			<button class="delete-button" data-id="{{ venue.id }}">Delete Venue</button>
 		</p>
 		<div class="genres">
 			{% for genre in venue.genres %}
@@ -74,6 +75,20 @@
 		{% endfor %}
 	</div>
 </section>
-
+<script>
+	const deleteBtns = document.querySelectorAll('.delete-button');
+	for (let i = 0; i < deleteBtns.length; i++) {
+		const btn = deleteBtns[i];
+		btn.onclick = function(e) {
+			const venueId = e.target.dataset['id'];
+			fetch('/venues/' + venueId, {
+				method: 'DELETE'
+			})
+			.then(function() {
+				btn.remove();
+			})
+		}
+	}
+</script>
 {% endblock %}
 
