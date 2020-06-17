@@ -101,7 +101,7 @@ def venues():
 @app.route('/venues/search', methods=['POST'])
 def search_venues():
   data = []
-  venueList = Venue.query.filter(Venue.name.contains(request.form['search_term'])).all()
+  venueList = Venue.query.filter(Venue.name.ilike('%' + request.form['search_term'] + '%')).all()
   for venue in venueList:
     data.append({
       "id": venue.id,
@@ -134,7 +134,8 @@ def show_venue(venue_id):
     upcomingShowList = []
     pastShowList = []
     current_time = datetime.now().strftime('%c')
-    upcomingShows = Show.query.filter(Show.venue_id == venue_id).filter(Show.start_time > current_time).all()
+    upcomingShows = db.session.query(Show).join(Venue, Show.artist_id == venue_id).filter(Show.start_time > current_time).all()
+    # upcomingShows = Show.query.filter(Show.venue_id == venue_id).filter(Show.start_time > current_time).all()
     for upcomingShow in upcomingShows:
       upcomingShowList.append({
         "artist_id": upcomingShow.artist.id,
@@ -223,7 +224,7 @@ def artists():
 @app.route('/artists/search', methods=['POST'])
 def search_artists():
   data = []
-  artistList = Artist.query.filter(Artist.name.contains(request.form['search_term'])).all()
+  artistList = Artist.query.filter(Artist.name.ilike('%' + request.form['search_term'] + '%')).all()
   for artist in artistList:
     data.append({
       "id": artist.id,
@@ -255,7 +256,8 @@ def show_artist(artist_id):
     upcomingShowList = []
     pastShowList = []
     current_time = datetime.now().strftime('%c')
-    upcomingShows = Show.query.filter(Show.artist_id == artist_id).filter(Show.start_time > current_time).all()
+    upcomingShows = db.session.query(Show).join(Artist, Show.artist_id == artist_id).filter(Show.start_time > current_time).all()
+    # upcomingShows = Show.query.filter(Show.artist_id == artist_id).filter(Show.start_time > current_time).all()
     for upcomingShow in upcomingShows:
       upcomingShowList.append({
         "venue_id": upcomingShow.venue.id,
