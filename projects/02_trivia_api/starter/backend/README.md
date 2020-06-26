@@ -98,3 +98,261 @@ createdb trivia_test
 psql trivia_test < trivia.psql
 python test_flaskr.py
 ```
+
+## API Reference
+
+### Getting Started
+
+* Base URL: At present this app can only be run locally and is not hosted as a base URL. The backend app is hosted at the default `http://127.0.0.1:5000/`, which is set as a proxy in the frontend configuration.
+* Authentication: This version of the application does not require authentication or API keys.
+
+### Error Handling
+
+Errors are returned as JSON objects in the following format:<br>
+
+    {
+        "success": False,
+        "error": 404,
+        "message": "resource not found"
+    }
+
+The API will return three error types:
+
+* 400 – Bad Request
+* 404 – Resource Not Found
+* 405 – Method Not Allowed
+* 422 – Unprocessable
+* 500 – Internal Server Error
+
+### Endpoints
+
+#### GET /categories
+* General: Returns the list of all categories.
+* Request Arguments: None.
+* Sample: `curl http://127.0.0.1:5000/categories`<br>
+
+        {
+            "categories": [
+                "Science", 
+                "Art", 
+                "Geography", 
+                "History", 
+                "Entertainment", 
+                "Sports"
+            ], 
+            "success": true
+        }
+
+
+#### GET /questions
+* General:
+  * Returns the list of all questions, the list of all categories, and total number of questions.
+  * Results are paginated in groups of 10.
+* Request Arguments: None.
+* Sample: `curl http://127.0.0.1:5000/questions`<br>
+
+        {
+            "categories": [
+                "Science", 
+                "Art", 
+                "Geography", 
+                "History", 
+                "Entertainment", 
+                "Sports"
+            ], 
+            "current_category": null, 
+            "questions": [
+                {
+                    "answer": "Apollo 13", 
+                    "category": 5, 
+                    "difficulty": 4, 
+                    "id": 2, 
+                    "question": "What movie earned Tom Hanks his third straight Oscar nomination, in 1996?"
+                }, 
+                {
+                    "answer": "Tom Cruise", 
+                    "category": 5, 
+                    "difficulty": 4, 
+                    "id": 4, 
+                    "question": "What actor did author Anne Rice first denounce, then praise in the role of her beloved Lestat?"
+                }, 
+                {
+                    "answer": "Maya Angelou", 
+                    "category": 4, 
+                    "difficulty": 2, 
+                    "id": 5, 
+                    "question": "Whose autobiography is entitled 'I Know Why the Caged Bird Sings'?"
+                }, 
+                {
+                    "answer": "Edward Scissorhands", 
+                    "category": 5, 
+                    "difficulty": 3, 
+                    "id": 6, 
+                    "question": "What was the title of the 1990 fantasy directed by Tim Burton about a young man with multi-bladed appendages?"
+                }, 
+                {
+                    "answer": "Muhammad Ali", 
+                    "category": 4, 
+                    "difficulty": 1, 
+                    "id": 9, 
+                    "question": "What boxer's original name is Cassius Clay?"
+                }, 
+                {
+                    "answer": "Brazil", 
+                    "category": 6, 
+                    "difficulty": 3, 
+                    "id": 10, 
+                    "question": "Which is the only team to play in every soccer World Cup tournament?"
+                }, 
+                {
+                    "answer": "Uruguay", 
+                    "category": 6, 
+                    "difficulty": 4, 
+                    "id": 11, 
+                    "question": "Which country won the first ever soccer World Cup in 1930?"
+                }, 
+                {
+                    "answer": "George Washington Carver", 
+                    "category": 4, 
+                    "difficulty": 2, 
+                    "id": 12, 
+                    "question": "Who invented Peanut Butter?"
+                }, 
+                {
+                    "answer": "Lake Victoria", 
+                    "category": 3, 
+                    "difficulty": 2, 
+                    "id": 13, 
+                    "question": "What is the largest lake in Africa?"
+                }, 
+                {
+                    "answer": "The Palace of Versailles", 
+                    "category": 3, 
+                    "difficulty": 3, 
+                    "id": 14, 
+                    "question": "In which royal palace would you find the Hall of Mirrors?"
+                }
+            ], 
+            "success": true, 
+            "total_questions": 23
+        }
+
+#### DELETE /questions/\<int:id\>
+* General:
+  * Deletes a question from the database by id.
+  * Returns the deleted question id if successful.
+* Request Arguments: None.
+* Sample: `curl http://127.0.0.1:5000/questions/5 -X DELETE`<br>
+
+        {
+            "deleted": 5, 
+            "success": true
+        }
+
+#### POST /addQuestions
+* General:
+  * Add a new question to the database with JSON request parameters.
+  * Returns total number of questions if successful.
+* Request Arguments: a JSON object containing request parameters(See example).
+* Sample: `curl http://127.0.0.1:5000/addQuestions -X POST -H "Content-Type: application/json" -d '
+        {
+            "question": "My Test Question",
+            "answer": "Test Answer",
+            "difficulty": 2,
+            "category": "4"
+        }'`<br>
+
+        {
+            "questions": 23, 
+            "success": true
+        }
+
+
+#### POST /search
+* General:
+  * Searches for questions by the "searchTerm" property from the requested JSON object.
+  * Returns a JSON object containing the list of matching questions and total number of questions.
+* Request Arguments: a JSON object containing search term(See example).
+* Sample: `curl http://127.0.0.1:5000/search -X POST -H "Content-Type: application/json" -d '{"searchTerm": "title"}'`<br>
+
+        {
+            "current_category": null, 
+            "questions": [
+                {
+                    "answer": "Edward Scissorhands", 
+                    "category": 5, 
+                    "difficulty": 3, 
+                    "id": 6, 
+                    "question": "What was the title of the 1990 fantasy directed by Tim Burton about a young man with multi-bladed appendages?"
+                }
+            ], 
+            "success": true, 
+            "total_questions": 22
+        }
+
+#### GET /categories/\<int:id\>/questions
+* General:
+  * Gets questions by category id.
+  * Returns a JSON object with the questions of the category.
+  * Results are paginated in groups of 10.
+* Request Arguments: None.
+* Sample: `curl http://127.0.0.1:5000/categories/2/questions`<br>
+
+        {
+            "current_category": 2, 
+            "questions": [
+                {
+                    "answer": "Escher", 
+                    "category": 2, 
+                    "difficulty": 1, 
+                    "id": 16, 
+                    "question": "Which Dutch graphic artist\u2013initials M C was a creator of optical illusions?"
+                }, 
+                {
+                    "answer": "Mona Lisa", 
+                    "category": 2, 
+                    "difficulty": 3, 
+                    "id": 17, 
+                    "question": "La Giaconda is better known as what?"
+                }, 
+                {
+                    "answer": "One", 
+                    "category": 2, 
+                    "difficulty": 4, 
+                    "id": 18, 
+                    "question": "How many paintings did Van Gogh sell in his lifetime?"
+                }, 
+                {
+                    "answer": "Jackson Pollock", 
+                    "category": 2, 
+                    "difficulty": 2, 
+                    "id": 19, 
+                    "question": "Which American artist was a pioneer of Abstract Expressionism, and a leading exponent of action painting?"
+                }
+            ], 
+            "success": true, 
+            "total_questions": 4
+        }
+
+#### POST /quizzes
+* General:
+  * Get questions to play a quiz game 
+  * Request JSON object contains the category and the list of previously answered questions.
+  * Returns a JSON object with a random question of the category which was not previously answered.
+* Request Arguments: a JSON object containing request parameters(See example).
+* Sample: `curl http://127.0.0.1:5000/quizzes -X POST -H "Content-Type: application/json" -d '
+        {
+            "previous_questions": [16, 17],
+            "quiz_category": {"type": "Art", "id": "2"}
+        }'`<br>'
+
+        {
+            "question": {
+                "answer": "Jackson Pollock", 
+                "category": 2, 
+                "difficulty": 2, 
+                "id": 19, 
+                "question": "Which American artist was a pioneer of Abstract Expressionism, and a leading exponent of action painting?"
+            }, 
+            "success": true
+        }
