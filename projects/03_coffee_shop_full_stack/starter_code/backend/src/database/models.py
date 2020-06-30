@@ -53,8 +53,13 @@ class Drink(db.Model):
         short form representation of the Drink model
     '''
     def short(self):
-        short_recipe = [{'color': r['color'], 'parts': r['parts']}
-                        for r in json.loads(self.recipe)]
+        process_recipe = json.loads(self.recipe)
+        if isinstance(process_recipe, list):
+            short_recipe = [{'color': r['color'], 'parts': r['parts']}
+                            for r in process_recipe]
+        else:
+            short_recipe = [{'color': process_recipe['color'],
+                             'parts': process_recipe['parts']}]
         return {
             'id': self.id,
             'title': self.title,

@@ -124,14 +124,12 @@ def update_drink(payload, drink_id):
 
     update_title = body.get('title', None)
     update_recipe = body.get('recipe', None)
-    if update_title is None:
-        abort(400)
-    if update_recipe is None:
-        abort(400)
 
     try:
-        update_drink.title = update_title
-        update_drink.recipe = json.dumps(update_recipe)
+        if update_title is not None:
+            update_drink.title = update_title
+        if update_recipe is not None:
+            update_drink.recipe = json.dumps(update_recipe)
         update_drink.update()
 
         return jsonify({
