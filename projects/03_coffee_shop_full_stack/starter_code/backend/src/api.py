@@ -30,7 +30,7 @@ def get_drinks():
             or appropriate status code indicating reason for failure
     '''
     drinks = Drink.query.order_by(Drink.id).all()
-    if not drinks:
+    if drinks is None:
         abort(404)
 
     formatted_drinks = [drink.short() for drink in drinks]
