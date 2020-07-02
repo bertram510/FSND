@@ -6,6 +6,7 @@ import random
 
 from models import setup_db, Actor, Movie, db_drop_and_create_all
 from auth import AuthError, requires_auth
+from datetime import date
 
 RESULTS_PER_PAGE = 10
 
@@ -50,7 +51,7 @@ def create_app(test_config=None):
     # ----------------------------------------------------------------------------#
     @app.route('/actors', methods=['GET'])
     @requires_auth('get:actors')
-    def get_actors():
+    def get_actors(payload):
         actors = Actor.query.all()
 
         if actors is None:
@@ -65,7 +66,7 @@ def create_app(test_config=None):
 
     @app.route('/movies', methods=['GET'])
     @requires_auth('get:movies')
-    def get_movies():
+    def get_movies(payload):
         movies = Movie.query.all()
 
         if movies is None:
@@ -80,7 +81,7 @@ def create_app(test_config=None):
 
     @app.route('/actors/<int:actor_id>', methods=['DELETE'])
     @requires_auth('delete:actors')
-    def delete_actor_by_id(actor_id):
+    def delete_actor_by_id(payload, actor_id):
         actor = Actor.query.filter(
             Actor.id == actor_id).one_or_none()
 
@@ -98,7 +99,7 @@ def create_app(test_config=None):
 
     @app.route('/movies/<int:movie_id>', methods=['DELETE'])
     @requires_auth('delete:movies')
-    def delete_movie_by_id(movie_id):
+    def delete_movie_by_id(payload, movie_id):
         movie = Movie.query.filter(
             Movie.id == movie_id).one_or_none()
 
@@ -116,7 +117,7 @@ def create_app(test_config=None):
 
     @app.route('/actors', methods=["POST"])
     @requires_auth('create:actors')
-    def add_actor():
+    def add_actor(payload):
         body = request.get_json()
 
         new_name = body.get('name', None)
@@ -147,7 +148,7 @@ def create_app(test_config=None):
 
     @app.route('/movies', methods=["POST"])
     @requires_auth('create:movies')
-    def add_movie():
+    def add_movie(payload):
         body = request.get_json()
 
         new_title = body.get('title', None)
@@ -156,13 +157,15 @@ def create_app(test_config=None):
         if new_title is None:
             abort(400)
         if new_release_date is None:
-            abort(400)
+            new_release_date = date.today()
 
+        print(body)
         try:
             movie = Movie(
                 title=new_title,
                 release_date=new_release_date
                 )
+            print("went through")
             Movie.insert(movie)
 
             return jsonify({

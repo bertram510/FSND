@@ -6,7 +6,6 @@ from flask_sqlalchemy import SQLAlchemy
 
 from app import create_app
 from models import setup_db, Actor, Movie, db_drop_and_create_all
-from models import db_init_records
 from datetime import date
 
 bearer_tokens = {
@@ -47,8 +46,6 @@ class CastAgencyTestCase(unittest.TestCase):
             self.db.init_app(self.app)
             # create all tables
             self.db.create_all()
-
-        db_init_records()
 
     def tearDown(self):
         """Executed after reach test"""
@@ -208,8 +205,10 @@ class CastAgencyTestCase(unittest.TestCase):
     def test_update_movies_by_id(self):
         update_movie = {
             'title': 'John Smith',
-            'release_date': date.today()
+            'release_date': date.today().__str__()
         }
+
+        print(update_movie)
         res = self.client().patch('/movies/2', json=update_movie,
                                   headers=casting_director_header)
         data = json.loads(res.data)
