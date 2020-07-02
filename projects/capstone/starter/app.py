@@ -4,23 +4,25 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_cors import CORS
 import random
 
-from models import setup_db, Question, Category
+from models import setup_db, Actor, Movie, db_drop_and_create_all
+from auth import AuthError, requires_auth
 
-QUESTIONS_PER_PAGE = 10
+RESULTS_PER_PAGE = 10
 
 
 def create_app(test_config=None):
 
     app = Flask(__name__)
     setup_db(app)
+    db_drop_and_create_all()
 
     '''
-    @DONE:Set up CORS. Allow '*' for origins.
+    Set up CORS.
     '''
-    cors = CORS(app, resources={r"/api/*": {"origins": "*"}})
+    CORS(app)
 
     '''
-    @DONE:Use the after_request decorator to set Access-Control-Allow
+    Use the after_request decorator to set Access-Control-Allow
     '''
     @app.after_request
     def after_request(response):
@@ -33,257 +35,204 @@ def create_app(test_config=None):
     # ----------------------------------------------------------------------------#
     # Custom Functions
     # ----------------------------------------------------------------------------#
-    def paginate_questions(request, selection):
+    def paginate_results(request, selection):
         page = request.args.get('page', 1, type=int)
-        start = (page - 1) * QUESTIONS_PER_PAGE
-        end = start + QUESTIONS_PER_PAGE
+        start = (page - 1) * RESULTS_PER_PAGE
+        end = start + RESULTS_PER_PAGE
 
-        questions = [question.format() for question in selection]
-        current_questions = questions[start:end]
+        results = [result.format() for result in selection]
+        current_results = results[start:end]
 
-        return current_questions
+        return current_results
 
     # ----------------------------------------------------------------------------#
     # API Endpoints
     # ----------------------------------------------------------------------------#
-    '''
-    DONE:
-    Create an endpoint to handle GET requests
-    for all available categories.
-    '''
-    @app.route('/categories', methods=['GET'])
-    def get_categories():
-        categories = Category.query.all()
+    @app.route('/actors', methods=['GET'])
+    @requires_auth('get:actors')
+    def get_actors():
+        actors = Actor.query.all()
 
-        if not categories:
+        if actors is None:
             abort(404)
 
-        formatted_categories = [category.format()['type']
-                                for category in categories]
-        return jsonify({
-            'success': True,
-            'categories': formatted_categories
-        })
-
-    '''
-    DONE:
-    Create an endpoint to handle GET requests for questions,
-    including pagination (every 10 questions).
-    This endpoint should return a list of questions,
-    number of total questions, current category, categories.
-
-    TEST: At this point, when you start the application
-    you should see questions and categories generated,
-    ten questions per page and pagination at the bottom of the
-    screen for three pages. Clicking on the page numbers should
-    update the questions.
-    '''
-    @app.route('/questions', methods=['GET'])
-    def get_questions():
-        questions = Question.query.order_by(Question.id).all()
-        paginated_questions = paginate_questions(request, questions)
-
-        if not paginated_questions:
-            abort(404)
-
-        categories = Category.query.all()
-        formatted_categories = [category.format()['type']
-                                for category in categories]
+        formatted_actors = [actor.format() for actor in actors]
 
         return jsonify({
             'success': True,
-            'questions': paginated_questions,
-            'total_questions': len(questions),
-            'categories': formatted_categories,
-            'current_category': None
+            'actors': formatted_actors
         })
 
-    '''
-    DONE:
-    Create an endpoint to DELETE question using a question ID.
+    @app.route('/movies', methods=['GET'])
+    @requires_auth('get:movies')
+    def get_movies():
+        movies = Movie.query.all()
 
-    TEST: When you click the trash icon next to a question, the
-    question will be removed. This removal will persist in the
-    database and when you refresh the page.
-    '''
-    @app.route('/questions/<int:question_id>', methods=['DELETE'])
-    def delete_question_by_id(question_id):
-        question = Question.query.filter(
-            Question.id == question_id).one_or_none()
+        if movies is None:
+            abort(404)
 
-        if question is None:
+        formatted_movies = [movie.format() for movie in movies]
+
+        return jsonify({
+            'success': True,
+            'movies': formatted_movies
+        })
+
+    @app.route('/actors/<int:actor_id>', methods=['DELETE'])
+    @requires_auth('delete:actors')
+    def delete_actor_by_id(actor_id):
+        actor = Actor.query.filter(
+            Actor.id == actor_id).one_or_none()
+
+        if actor is None:
             abort(400)
 
         try:
-            question.delete()
+            actor.delete()
             return jsonify({
                 'success': True,
-                'deleted': question_id
+                'deleted_actor': actor_id
             })
         except Exception:
             abort(422)
 
-    '''
-    DONE:
-    Create an endpoint to POST a new question,
-    which will require the question and answer text,
-    category, and difficulty score.
+    @app.route('/movies/<int:movie_id>', methods=['DELETE'])
+    @requires_auth('delete:movies')
+    def delete_movie_by_id(movie_id):
+        movie = Movie.query.filter(
+            Movie.id == movie_id).one_or_none()
 
-    TEST: When you submit a question on the "Add" tab,
-    the form will clear and the question will appear at the end of the last
-    page of the questions list in the "List" tab.
-    '''
-    @app.route('/addQuestions', methods=["POST"])
-    def add_question():
-        body = request.get_json()
-
-        new_question = body.get('question', None)
-        new_answer = body.get('answer', None)
-        new_category = body.get('category', None)
-        new_difficulty = body.get('difficulty', None)
-
-        if new_question is None:
-            abort(400)
-        if new_answer is None:
-            abort(400)
-        if new_category is None:
-            abort(400)
-        if new_difficulty is None:
+        if movie is None:
             abort(400)
 
         try:
-            question = Question(
-                question=new_question, answer=new_answer,
-                category=new_category, difficulty=new_difficulty)
-            Question.insert(question)
-
+            movie.delete()
             return jsonify({
                 'success': True,
-                'questions': len(Question.query.all())
+                'deleted_movie': movie_id
             })
         except Exception:
             abort(422)
 
-    '''
-    DONE:
-    Create a POST endpoint to get questions based on a search term.
-    It should return any questions for whom the search term
-    is a substring of the question.
-
-    TEST: Search by any phrase. The questions list will update to include
-    only question that include that string within their question.
-    Try using the word "title" to start.
-    '''
-    @app.route('/search', methods=["POST"])
-    def search_question():
+    @app.route('/actors', methods=["POST"])
+    @requires_auth('create:actors')
+    def add_actor():
         body = request.get_json()
-        search_term = body.get('searchTerm', None)
 
-        if search_term is None:
-            abort(422)
+        new_name = body.get('name', None)
+        new_age = body.get('age', None)
+        new_gender = body.get('gender', None)
 
-        questions = Question.query.filter(
-            Question.question.ilike('%' + search_term + '%')).all()
-
-        if not questions:
-            abort(404)
-
-        formatted_questions = [question.format() for question in questions]
-
-        return jsonify({
-            'success': True,
-            'questions': formatted_questions,
-            'total_questions': len(Question.query.all()),
-            'current_category': None
-        })
-
-    '''
-    DONE:
-    Create a GET endpoint to get questions based on category.
-
-    TEST: In the "List" tab / main screen, clicking on one of the
-    categories in the left column will cause only questions of that
-    category to be shown.
-    '''
-    @app.route('/categories/<int:category_id>/questions', methods=['GET'])
-    def get_questions_by_category_id(category_id):
-        questions = (Question.query.filter(Question.category == category_id)
-                                   .order_by(Question.id)
-                                   .all())
-
-        if not questions:
-            abort(404)
-
-        paginated_questions = paginate_questions(request, questions)
-
-        return jsonify({
-            'success': True,
-            'questions': paginated_questions,
-            'total_questions': len(questions),
-            'current_category': category_id
-        })
-
-    '''
-    DONE:
-    Create a POST endpoint to get questions to play the quiz.
-    This endpoint should take category and previous question parameters
-    and return a random questions within the given category,
-    if provided, and that is not one of the previous questions.
-
-    TEST: In the "Play" tab, after a user selects "All" or a category,
-    one question at a time is displayed, the user is allowed to answer
-    and shown whether they were correct or not.
-    '''
-    @app.route('/quizzes', methods=['POST'])
-    def quiz():
-        body = request.get_json()
-        quiz_category = body.get('quiz_category', None)
-        previous_questions = body.get('previous_questions', None)
-
-        if quiz_category is None:
+        if new_name is None:
+            abort(400)
+        if new_age is None:
+            abort(400)
+        if new_gender is None:
             abort(400)
 
-        if quiz_category['id'] == 0:
-            if not previous_questions:
-                questions = Question.query.all()
-            else:
-                questions = (Question.query
-                                     .filter(Question.id
-                                             .notin_(previous_questions))
-                                     .all())
-        else:
-            if previous_questions is None:
-                questions = (Question.query
-                                     .filter(Question.category
-                                             == quiz_category['id'])
-                                     .all())
-            else:
-                questions = (Question.query
-                                     .filter(Question.category
-                                             == quiz_category['id'])
-                                     .filter(Question.id
-                                             .notin_(previous_questions))
-                                     .all())
+        try:
+            actor = Actor(
+                name=new_name,
+                age=new_age,
+                gender=new_gender)
+            Actor.insert(actor)
 
-        formatted_questions = [question.format() for question in questions]
-        if len(formatted_questions) == 0:
             return jsonify({
-                'success': False,
-                'question': None
+                'success': True,
+                'new_actor': actor.id,
+                'actors': len(Actor.query.all())
             })
+        except Exception:
+            abort(422)
 
-        quiz_question = formatted_questions[
-            random.randint(0, len(formatted_questions)) - 1]
-        return jsonify({
-            'success': True,
-            'question': quiz_question
-        })
+    @app.route('/movies', methods=["POST"])
+    @requires_auth('create:movies')
+    def add_movie():
+        body = request.get_json()
 
-    '''
-    DONE:
-    Create error handlers for all expected errors
-    including 404 and 422.
-    '''
+        new_title = body.get('title', None)
+        new_release_date = body.get('release_date', None)
+
+        if new_title is None:
+            abort(400)
+        if new_release_date is None:
+            abort(400)
+
+        try:
+            movie = Movie(
+                title=new_title,
+                release_date=new_release_date
+                )
+            Movie.insert(movie)
+
+            return jsonify({
+                'success': True,
+                'new_movie': movie.id,
+                'movies': len(Movie.query.all())
+            })
+        except Exception:
+            abort(422)
+
+    @app.route('/actors/<int:actor_id>',  methods=['PATCH'])
+    @requires_auth('patch:actors')
+    def update_actor(payload, actor_id):
+        body = request.get_json()
+
+        update_actor = Actor.query.filter(Actor.id == actor_id).one_or_none()
+
+        if update_actor is None:
+            abort(400)
+
+        update_name = body.get('name', None)
+        update_age = body.get('age', None)
+        update_gender = body.get('gender', None)
+
+        try:
+            if update_name is not None:
+                update_actor.title = update_name
+            if update_age is not None:
+                update_actor.age = update_age
+            if update_gender is not None:
+                update_actor.gender = update_gender
+            update_actor.update()
+
+            return jsonify({
+                'success': True,
+                'update_actor': [update_actor.format()]
+            })
+        except Exception:
+            abort(422)
+
+    @app.route('/movies/<int:movie_id>',  methods=['PATCH'])
+    @requires_auth('patch:movies')
+    def update_movie(payload, movie_id):
+        body = request.get_json()
+
+        update_movie = Movie.query.filter(Movie.id == movie_id).one_or_none()
+
+        if update_movie is None:
+            abort(400)
+
+        update_title = body.get('title', None)
+        update_release_date = body.get('release_date', None)
+
+        try:
+            if update_title is not None:
+                update_movie.title = update_title
+            if update_release_date is not None:
+                update_movie.release_date = update_release_date
+            update_movie.update()
+
+            return jsonify({
+                'success': True,
+                'update_movie': [update_movie.format()]
+            })
+        except Exception:
+            abort(422)
+
+    # ----------------------------------------------------------------------------#
+    # Error Handlers
+    # ----------------------------------------------------------------------------#
     @app.errorhandler(400)
     def bad_request(error):
         return jsonify({
@@ -324,7 +273,16 @@ def create_app(test_config=None):
             "message": "internal server error"
         }), 500
 
+    @app.errorhandler(AuthError)
+    def authentification_failed(AuthError):
+        return jsonify({
+            "success": False,
+            "error": AuthError.status_code,
+            "message": "authentification failed"
+        }), 401
+
     return app
+
 
 APP = create_app()
 
