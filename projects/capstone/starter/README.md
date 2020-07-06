@@ -30,17 +30,22 @@ This will install all of the required packages we selected within the `requireme
 
 - [Flask-CORS](https://flask-cors.readthedocs.io/en/latest/#) is the extension we'll use to handle cross origin requests from our frontend server. 
 
-## Database Setup
-With Postgres running, restore a database using the trivia.psql file provided. From the backend folder in terminal run:
-```bash
-psql trivia < trivia.psql
-```
+## Accessing API Endpoints from Heroku
+The application has been fully deployed on Heroku: https://casting-agency-wu.herokuapp.com/
+You can access all the API endpoints mentioned in the API Documents below with the domain provided above.
+
+### Auth0
+To test the API Endpoints on Heroku, you'll also need the JWT tokens from Auth0 authorization process.
+You can find the existing bearer tokens for each role from `models.py`, or using the Auth0 login page below:
+https://berrtam510.us.auth0.com/authorize?audience=cast&response_type=token&client_id=t5jPtoqRd964bbVnOtWVspv7YA35Pwva&redirect_uri=https://casting-agency-wu.herokuapp.com/
+
+Use the following login:
+- Casting Assistant: casting.assistant@hotmail.com, Password: Udacity2020
+- Casting Director: casting.director@hotmail.com, Password: Udacity2020
+- Executive Producer: executive.producer@hotmail.com, Password: Udacity2020
 
 ## Running the server
-
-From within the `backend` directory first ensure you are working using your created virtual environment.
-
-To run the server, execute:
+To run the server locally, make sure to change the `datapath` variable to `localhost:5432`(the commented out one), and then execute:
 
 ```bash
 export FLASK_APP=app
@@ -52,59 +57,20 @@ Setting the `FLASK_ENV` variable to `development` will detect file changes and r
 
 Setting the `FLASK_APP` variable to `flaskr` directs flask to use the `flaskr` directory and the `__init__.py` file to find the application. 
 
-## Tasks
-
-One note before you delve into your tasks: for each endpoint you are expected to define the endpoint and response data. The frontend will be a plentiful resource because it is set up to expect certain endpoints and response data formats already. You should feel free to specify endpoints in your own way; if you do so, make sure to update the frontend or you will get some unexpected behavior. 
-
-1. Use Flask-CORS to enable cross-domain requests and set response headers. 
-2. Create an endpoint to handle GET requests for questions, including pagination (every 10 questions). This endpoint should return a list of questions, number of total questions, current category, categories. 
-3. Create an endpoint to handle GET requests for all available categories. 
-4. Create an endpoint to DELETE question using a question ID. 
-5. Create an endpoint to POST a new question, which will require the question and answer text, category, and difficulty score. 
-6. Create a POST endpoint to get questions based on category. 
-7. Create a POST endpoint to get questions based on a search term. It should return any questions for whom the search term is a substring of the question. 
-8. Create a POST endpoint to get questions to play the quiz. This endpoint should take category and previous question parameters and return a random questions within the given category, if provided, and that is not one of the previous questions. 
-9. Create error handlers for all expected errors including 400, 404, 422 and 500. 
-
-REVIEW_COMMENT
-```
-This README is missing documentation of your endpoints. Below is an example for your endpoint to get all categories. Please use it as a reference for creating your documentation and resubmit your code. 
-
-Endpoints
-GET '/categories'
-GET ...
-POST ...
-DELETE ...
-
-GET '/categories'
-- Fetches a dictionary of categories in which the keys are the ids and the value is the corresponding string of the category
-- Request Arguments: None
-- Returns: An object with a single key, categories, that contains a object of id: category_string key:value pairs. 
-{'1' : "Science",
-'2' : "Art",
-'3' : "Geography",
-'4' : "History",
-'5' : "Entertainment",
-'6' : "Sports"}
-
-```
-
-
 ## Testing
 To run the tests, run
 ```
-dropdb trivia_test
-createdb trivia_test
-psql trivia_test < trivia.psql
-python test_flaskr.py
+dropdb cast_agency_test
+createdb cast_agency_test
+python test_app.py
 ```
 
 ## API Reference
 
 ### Getting Started
 
-* Base URL: At present this app can only be run locally and is not hosted as a base URL. The backend app is hosted at the default `http://127.0.0.1:5000/`, which is set as a proxy in the frontend configuration.
-* Authentication: This version of the application does not require authentication or API keys.
+* Base URL: This app is currently hosted on Heroku: https://casting-agency-wu.herokuapp.com/. You can use this domain for your frontend configuration.
+* Authentication: Please refer to the "Accessing API Endpoints from Heroku" section for authentication information.
 
 ### Error Handling
 
@@ -119,6 +85,7 @@ Errors are returned as JSON objects in the following format:<br>
 The API will return three error types:
 
 * 400 – Bad Request
+* 401 – Authorization Failed
 * 404 – Resource Not Found
 * 405 – Method Not Allowed
 * 422 – Unprocessable
@@ -126,233 +93,148 @@ The API will return three error types:
 
 ### Endpoints
 
-#### GET /categories
-* General: Returns the list of all categories.
+#### GET /actors
+* General: Returns the list of all actors.
 * Request Arguments: None.
-* Sample: `curl http://127.0.0.1:5000/categories`<br>
+* Required Permission: `get:actors`
+* Sample: `curl https://casting-agency-wu.herokuapp.com/actors`<br>
 
         {
-            "categories": [
-                "Science", 
-                "Art", 
-                "Geography", 
-                "History", 
-                "Entertainment", 
-                "Sports"
-            ], 
-            "success": true
-        }
-
-
-#### GET /questions
-* General:
-  * Returns the list of all questions, the list of all categories, and total number of questions.
-  * Results are paginated in groups of 10.
-* Request Arguments: None.
-* Sample: `curl http://127.0.0.1:5000/questions`<br>
-
-        {
-            "categories": [
-                "Science", 
-                "Art", 
-                "Geography", 
-                "History", 
-                "Entertainment", 
-                "Sports"
-            ], 
-            "current_category": null, 
-            "questions": [
+            "actors": [
                 {
-                    "answer": "Apollo 13", 
-                    "category": 5, 
-                    "difficulty": 4, 
-                    "id": 2, 
-                    "question": "What movie earned Tom Hanks his third straight Oscar nomination, in 1996?"
-                }, 
-                {
-                    "answer": "Tom Cruise", 
-                    "category": 5, 
-                    "difficulty": 4, 
-                    "id": 4, 
-                    "question": "What actor did author Anne Rice first denounce, then praise in the role of her beloved Lestat?"
-                }, 
-                {
-                    "answer": "Maya Angelou", 
-                    "category": 4, 
-                    "difficulty": 2, 
-                    "id": 5, 
-                    "question": "Whose autobiography is entitled 'I Know Why the Caged Bird Sings'?"
-                }, 
-                {
-                    "answer": "Edward Scissorhands", 
-                    "category": 5, 
-                    "difficulty": 3, 
-                    "id": 6, 
-                    "question": "What was the title of the 1990 fantasy directed by Tim Burton about a young man with multi-bladed appendages?"
-                }, 
-                {
-                    "answer": "Muhammad Ali", 
-                    "category": 4, 
-                    "difficulty": 1, 
-                    "id": 9, 
-                    "question": "What boxer's original name is Cassius Clay?"
-                }, 
-                {
-                    "answer": "Brazil", 
-                    "category": 6, 
-                    "difficulty": 3, 
-                    "id": 10, 
-                    "question": "Which is the only team to play in every soccer World Cup tournament?"
-                }, 
-                {
-                    "answer": "Uruguay", 
-                    "category": 6, 
-                    "difficulty": 4, 
-                    "id": 11, 
-                    "question": "Which country won the first ever soccer World Cup in 1930?"
-                }, 
-                {
-                    "answer": "George Washington Carver", 
-                    "category": 4, 
-                    "difficulty": 2, 
-                    "id": 12, 
-                    "question": "Who invented Peanut Butter?"
-                }, 
-                {
-                    "answer": "Lake Victoria", 
-                    "category": 3, 
-                    "difficulty": 2, 
-                    "id": 13, 
-                    "question": "What is the largest lake in Africa?"
-                }, 
-                {
-                    "answer": "The Palace of Versailles", 
-                    "category": 3, 
-                    "difficulty": 3, 
-                    "id": 14, 
-                    "question": "In which royal palace would you find the Hall of Mirrors?"
+                    "age": 25,
+                    "gender": "Male",
+                    "id": 1,
+                    "name": "John Smith"
                 }
             ], 
-            "success": true, 
-            "total_questions": 23
-        }
-
-#### DELETE /questions/\<int:id\>
-* General:
-  * Deletes a question from the database by id.
-  * Returns the deleted question id if successful.
-* Request Arguments: None.
-* Sample: `curl http://127.0.0.1:5000/questions/5 -X DELETE`<br>
-
-        {
-            "deleted": 5, 
             "success": true
         }
 
-#### POST /addQuestions
-* General:
-  * Add a new question to the database with JSON request parameters.
-  * Returns total number of questions if successful.
-* Request Arguments: a JSON object containing request parameters(See example).
-* Sample: `curl http://127.0.0.1:5000/addQuestions -X POST -H "Content-Type: application/json" -d '
+#### GET /movies
+* General: Returns the list of all movies.
+* Request Arguments: None.
+* Required Permission: `get:movies`
+* Sample: `curl https://casting-agency-wu.herokuapp.com/movies`<br>
+
         {
-            "question": "My Test Question",
-            "answer": "Test Answer",
-            "difficulty": 2,
-            "category": "4"
+            "movies": [
+                {
+                    "id": 1,
+                    "release_date": "2020-06-17",
+                    "title": "John Wick"
+                }
+            ],
+            "success": true
+        }
+
+#### DELETE /actors/\<int:actor_id\>
+* General:
+  * Deletes an actor from the database by actor_id.
+  * Returns the deleted actor id if successful.
+* Request Arguments: None.
+* Required Permission: `delete:actors`
+* Sample: `curl https://casting-agency-wu.herokuapp.com/actors/1 -X DELETE`<br>
+
+        {
+            "deleted": 1, 
+            "success": true
+        }
+
+#### DELETE /movies/\<int:movie_id\>
+* General:
+  * Deletes a movie from the database by movie_id.
+  * Returns the deleted movie id if successful.
+* Request Arguments: None.
+* Required Permission: `delete:movies`
+* Sample: `curl https://casting-agency-wu.herokuapp.com/movies/1 -X DELETE`<br>
+
+        {
+            "deleted": 1, 
+            "success": true
+        }
+
+#### POST /actors
+* General:
+  * Add a new actor to the database with JSON request parameters.
+  * Returns the new actor id and the total number of actors if successful.
+* Request Arguments: a JSON object containing request parameters(See example).
+* Required Permission: `create:actors`
+* Sample: `curl https://casting-agency-wu.herokuapp.com/actors -X POST -H "Content-Type: application/json" -d '
+        {
+            "name": "Carry Underwood",
+            "gender": "Female",
+            "age": 24
         }'`<br>
 
         {
-            "questions": 23, 
+            "actors": 12,
+            "new_actor": 10,
             "success": true
         }
 
-
-#### POST /search
+#### POST /movies
 * General:
-  * Searches for questions by the "searchTerm" property from the requested JSON object.
-  * Returns a JSON object containing the list of matching questions and total number of questions.
-* Request Arguments: a JSON object containing search term(See example).
-* Sample: `curl http://127.0.0.1:5000/search -X POST -H "Content-Type: application/json" -d '{"searchTerm": "title"}'`<br>
-
-        {
-            "current_category": null, 
-            "questions": [
-                {
-                    "answer": "Edward Scissorhands", 
-                    "category": 5, 
-                    "difficulty": 3, 
-                    "id": 6, 
-                    "question": "What was the title of the 1990 fantasy directed by Tim Burton about a young man with multi-bladed appendages?"
-                }
-            ], 
-            "success": true, 
-            "total_questions": 22
-        }
-
-#### GET /categories/\<int:id\>/questions
-* General:
-  * Gets questions by category id.
-  * Returns a JSON object with the questions of the category.
-  * Results are paginated in groups of 10.
-* Request Arguments: None.
-* Sample: `curl http://127.0.0.1:5000/categories/2/questions`<br>
-
-        {
-            "current_category": 2, 
-            "questions": [
-                {
-                    "answer": "Escher", 
-                    "category": 2, 
-                    "difficulty": 1, 
-                    "id": 16, 
-                    "question": "Which Dutch graphic artist\u2013initials M C was a creator of optical illusions?"
-                }, 
-                {
-                    "answer": "Mona Lisa", 
-                    "category": 2, 
-                    "difficulty": 3, 
-                    "id": 17, 
-                    "question": "La Giaconda is better known as what?"
-                }, 
-                {
-                    "answer": "One", 
-                    "category": 2, 
-                    "difficulty": 4, 
-                    "id": 18, 
-                    "question": "How many paintings did Van Gogh sell in his lifetime?"
-                }, 
-                {
-                    "answer": "Jackson Pollock", 
-                    "category": 2, 
-                    "difficulty": 2, 
-                    "id": 19, 
-                    "question": "Which American artist was a pioneer of Abstract Expressionism, and a leading exponent of action painting?"
-                }
-            ], 
-            "success": true, 
-            "total_questions": 4
-        }
-
-#### POST /quizzes
-* General:
-  * Get questions to play a quiz game 
-  * Request JSON object contains the category and the list of previously answered questions.
-  * Returns a JSON object with a random question of the category which was not previously answered.
+  * Add a new movie to the database with JSON request parameters.
+  * Returns the new movie id and the total number of movies if successful.
 * Request Arguments: a JSON object containing request parameters(See example).
-* Sample: `curl http://127.0.0.1:5000/quizzes -X POST -H "Content-Type: application/json" -d '
+* Required Permission: `create:movies`
+* Sample: `curl https://casting-agency-wu.herokuapp.com/movies -X POST -H "Content-Type: application/json" -d '
         {
-            "previous_questions": [16, 17],
-            "quiz_category": {"type": "Art", "id": "2"}
-        }'`<br>'
+            "title": "Inception 2",
+            "release_date": "2020-06-17"
+        }'`<br>
 
         {
-            "question": {
-                "answer": "Jackson Pollock", 
-                "category": 2, 
-                "difficulty": 2, 
-                "id": 19, 
-                "question": "Which American artist was a pioneer of Abstract Expressionism, and a leading exponent of action painting?"
-            }, 
+            "movies": 3,
+            "new_movie": 3,
             "success": true
         }
+
+
+#### PATCH /actors\<int:actor_id\>
+* General:
+  * Modify an actor data from the database by actor_id with JSON request parameters.
+  * Returns the updated actor id if successful.
+* Request Arguments: a JSON object containing request parameters(See example).
+* Required Permission: `patch:actors`
+* Sample: `curl https://casting-agency-wu.herokuapp.com/actors/3 -X POST -H "Content-Type: application/json" -d '
+        {
+            "name": "Nicole Kidman",
+            "gender": "Female",
+            "age": 53
+        }'`<br>
+
+        {
+            "success": true,
+            "update_actor": [
+                {
+                    "age": 53,
+                    "gender": "Female",
+                    "id": 3,
+                    "name": "Nicole Kidman"
+                }
+            ]
+        }
+
+#### PATCH /movies\<int:movie_id\>
+* General:
+  * Modify a movie data from the database by movie_id with JSON request parameters.
+  * Returns the updated movie id if successfuls.
+* Request Arguments: a JSON object containing request parameters(See example).
+* Required Permission: `patch:movies`
+* Sample: `curl https://casting-agency-wu.herokuapp.com/movies/3 -X POST -H "Content-Type: application/json" -d '
+        {
+            "title": "Inception 3"
+        }'`<br>
+
+        {
+            "success": true,
+            "update_movie": [
+                {
+                    "title": "Inception 3",
+                    "release_date": "2020-06-17"
+                }
+            ]
+        }
+
