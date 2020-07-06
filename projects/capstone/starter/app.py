@@ -157,15 +157,13 @@ def create_app(test_config=None):
         if new_title is None:
             abort(400)
         if new_release_date is None:
-            new_release_date = date.today()
+            abort(400)
 
-        print(body)
         try:
             movie = Movie(
                 title=new_title,
                 release_date=new_release_date
                 )
-            print("went through")
             Movie.insert(movie)
 
             return jsonify({

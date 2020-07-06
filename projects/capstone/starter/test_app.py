@@ -8,22 +8,16 @@ from app import create_app
 from models import setup_db, Actor, Movie, db_drop_and_create_all
 from datetime import date
 
-bearer_tokens = {
-    "casting_assistant": "Bearer eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6ImN5S0NzTE5yS01UblpfTUhjdERTaSJ9.eyJpc3MiOiJodHRwczovL2JlcnJ0YW01MTAudXMuYXV0aDAuY29tLyIsInN1YiI6ImF1dGgwfDVlZmEyYTBkZmQzMGUyMDAxMzY2MDM0ZSIsImF1ZCI6ImNhc3QiLCJpYXQiOjE1OTM2NzY5NjUsImV4cCI6MTU5Mzc2MzM2NSwiYXpwIjoidDVqUHRvcVJkOTY0YmJWbk90V1ZzcHY3WUEzNVB3dmEiLCJzY29wZSI6IiIsInBlcm1pc3Npb25zIjpbImdldDphY3RvcnMiLCJnZXQ6bW92aWVzIl19.m5VhFc_dp9e98ieVAh8GNG39qN-Q7PocAKA7tW-CqiVksdilnHpMOtVMRGtXi-TIUtfNk57K479bKYBEgMBkoi3RoYoI0ABnU_rBc0xHmvIvfQnClcFmXHemIYbUjj30FwWF8in_GkEHsnEcZ72vHqA-MygRi1gli1dtgBl2aolkfssGbFneIRcjTLG8Y1xttu7nylMpuFfkyvKJ3gmLbGufZl3M6PEM2K8Earhd0Ed2y4IKUR-7stCCHyvbHjHFNiihxuz0hQmXt173-Tf3a-AP5U1I-YkNEUjWeQHIY5pFdxDjcZt-gXOYz6SsnB24anTMW0JTdYbYnweBF2RA8Q",
-    "casting_director": "Bearer eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6ImN5S0NzTE5yS01UblpfTUhjdERTaSJ9.eyJpc3MiOiJodHRwczovL2JlcnJ0YW01MTAudXMuYXV0aDAuY29tLyIsInN1YiI6ImF1dGgwfDVlZmQ4NTI2YTFmNjAzMDAxOWIwNjg2MyIsImF1ZCI6ImNhc3QiLCJpYXQiOjE1OTM2NzcwMjksImV4cCI6MTU5Mzc2MzQyOSwiYXpwIjoidDVqUHRvcVJkOTY0YmJWbk90V1ZzcHY3WUEzNVB3dmEiLCJzY29wZSI6IiIsInBlcm1pc3Npb25zIjpbImNyZWF0ZTphY3RvcnMiLCJkZWxldGU6YWN0b3JzIiwiZ2V0OmFjdG9ycyIsImdldDptb3ZpZXMiLCJwYXRjaDphY3RvcnMiLCJwYXRjaDptb3ZpZXMiXX0.1vDaGbszRDMgwnpEXlRIYy6mC_4CogXb9uRUuiX6jQ1s1zFMKmT7Kq_Z5Dlgn7GrLVNvMlemgHTJ0zj5KcEhY_IKSzZfZ8b-D38buliM5BzunfUPM9X96GLXLcaKOrErtKs0oekN706QiGI21zdl5QX26IOyPilr4PPcQH-OHbRoK4O51sgb873TMwS5drG6aF4XBlzARQt1rWlMcWVgQNga6mhyM7XOb5bIPi_LsDNdYetgvbvQeqdqUgqTrE5YhL4KaTSYw3CtssZgf0kIwOWXd6k2MsnQhr0Lm9r39XqHMwepd7DXmRKP8MR0fFrU3ip8idheGo-bwxEDMYrZ_A",
-    "executive_producer": "Bearer eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6ImN5S0NzTE5yS01UblpfTUhjdERTaSJ9.eyJpc3MiOiJodHRwczovL2JlcnJ0YW01MTAudXMuYXV0aDAuY29tLyIsInN1YiI6ImF1dGgwfDVlZmEyOWUxNzE0NjhjMDAxM2ZmYjkxZSIsImF1ZCI6ImNhc3QiLCJpYXQiOjE1OTM2NzY5MDcsImV4cCI6MTU5Mzc2MzMwNywiYXpwIjoidDVqUHRvcVJkOTY0YmJWbk90V1ZzcHY3WUEzNVB3dmEiLCJzY29wZSI6IiIsInBlcm1pc3Npb25zIjpbImNyZWF0ZTphY3RvcnMiLCJjcmVhdGU6bW92aWVzIiwiZGVsZXRlOmFjdG9ycyIsImRlbGV0ZTptb3ZpZXMiLCJnZXQ6YWN0b3JzIiwiZ2V0Om1vdmllcyIsInBhdGNoOmFjdG9ycyIsInBhdGNoOm1vdmllcyJdfQ.Av_Qco_PtBSW9GXU5JMswP009BwikY7IGc0lHLjFSeLV6ymWQs34N9cIkEp6VNWrtotdz3gWaEDc_ukLKjxkTAl4sU-lUI-C68QOegvUu5I9m7wGVLfJRXp-BG4ootco-7Z6mYObhpo4LRHmbE3KOMl8HkodFC9cP3Y_RNh0SotDIOiJr6eMkI_l16wRj4CInNgF8tHw0PHMKB0O7F7MtKgVhZh6HONUvZEjffY7eEpiOOHWXsxhVo8WoUfe1LwaSe6aIemhoh_lHTvyeUUHG6PQ-18E04PoeJnfjuBghL75J-DVkIFynuTCCub-GTO-FoMuptChnTPP8HSqdG1lPA"
-}
-
 casting_assistant_header = {
-    'Authorization': bearer_tokens['casting_assistant']
+    'Authorization': 'Bearer eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6ImN5S0NzTE5yS01UblpfTUhjdERTaSJ9.eyJpc3MiOiJodHRwczovL2JlcnJ0YW01MTAudXMuYXV0aDAuY29tLyIsInN1YiI6ImF1dGgwfDVlZmEyYTBkZmQzMGUyMDAxMzY2MDM0ZSIsImF1ZCI6ImNhc3QiLCJpYXQiOjE1OTQwMTU5NjEsImV4cCI6MTU5NDEwMjM2MSwiYXpwIjoidDVqUHRvcVJkOTY0YmJWbk90V1ZzcHY3WUEzNVB3dmEiLCJzY29wZSI6IiIsInBlcm1pc3Npb25zIjpbImdldDphY3RvcnMiLCJnZXQ6bW92aWVzIl19.2ZFMPDFs0VzQw3UW2iG_8P5bmfGOnXW1cPI_YR898UcM5ns894QB6pI9h1M37B0TFTZKUbEGncBy9l-IIARy0_A0SthVWINEG5GNXCVFXQgE5hyi76jgGrjv3wrQbTRGLew-IenzXPjNPB_e3wewFtx6Wul_x90xXHSWfzYXtDThmi6jFj9KrTvaBTqoL3j6IvynIpXT1KhEJEqyrfxBQYF5grXa-V_QpMevr5Qnd_2sNfWstv5vKwWND1kvJErrva_MsjOhWWx4OQ4yhNWbwuy9ISmIPjcd42WoGXI9LjepU18uJWkDPplovuqyMYeqHIyP6Np2fz2sgFm3jwoiTg'
 }
 
 casting_director_header = {
-    'Authorization': bearer_tokens['casting_assistant']
+    'Authorization': 'Bearer eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6ImN5S0NzTE5yS01UblpfTUhjdERTaSJ9.eyJpc3MiOiJodHRwczovL2JlcnJ0YW01MTAudXMuYXV0aDAuY29tLyIsInN1YiI6ImF1dGgwfDVlZmQ4NTI2YTFmNjAzMDAxOWIwNjg2MyIsImF1ZCI6ImNhc3QiLCJpYXQiOjE1OTQwMTYwMDcsImV4cCI6MTU5NDEwMjQwNywiYXpwIjoidDVqUHRvcVJkOTY0YmJWbk90V1ZzcHY3WUEzNVB3dmEiLCJzY29wZSI6IiIsInBlcm1pc3Npb25zIjpbImNyZWF0ZTphY3RvcnMiLCJkZWxldGU6YWN0b3JzIiwiZ2V0OmFjdG9ycyIsImdldDptb3ZpZXMiLCJwYXRjaDphY3RvcnMiLCJwYXRjaDptb3ZpZXMiXX0.bEK1LWS5APqukYNx9hXvTThPD9n4Felq_Io803IfZRMy2Ua4UZBL2T_er12TYKp4_c7JbAWXQRF5lF_9ujzoutJf-qibLpWVvHoh2Zt2szr8FDrrBmBp2f7ul9UEyGIekioRYrn0nGrfAU-DbNwyPmjFV9WWuBYYdDtOkjB-TenlbVVD9FeP1QPExomVzhSUpzG6l0Yzjho-G_5yGnpZteh49QbNRhnJh0JP8qFu6ptyUrw_0z3EwJ4gBgR-SSHqlFv7UHc9V_esZ-9MQvgqWUy8MeLDpWqoRzcXpKhz4R9vfPRVU1LsJW-5Zzl7em7at3mAjX3HKpcH8Gq-aWTiFw'
 }
 
 executive_producer_header = {
-    'Authorization': bearer_tokens['casting_assistant']
+    'Authorization': 'Bearer eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6ImN5S0NzTE5yS01UblpfTUhjdERTaSJ9.eyJpc3MiOiJodHRwczovL2JlcnJ0YW01MTAudXMuYXV0aDAuY29tLyIsInN1YiI6ImF1dGgwfDVlZmEyOWUxNzE0NjhjMDAxM2ZmYjkxZSIsImF1ZCI6ImNhc3QiLCJpYXQiOjE1OTQwMTU3MDgsImV4cCI6MTU5NDEwMjEwOCwiYXpwIjoidDVqUHRvcVJkOTY0YmJWbk90V1ZzcHY3WUEzNVB3dmEiLCJzY29wZSI6IiIsInBlcm1pc3Npb25zIjpbImNyZWF0ZTphY3RvcnMiLCJjcmVhdGU6bW92aWVzIiwiZGVsZXRlOmFjdG9ycyIsImRlbGV0ZTptb3ZpZXMiLCJnZXQ6YWN0b3JzIiwiZ2V0Om1vdmllcyIsInBhdGNoOmFjdG9ycyIsInBhdGNoOm1vdmllcyJdfQ.rH-Wsc4ecAKlQXzo8BlB2No-Q02m82X7yeSIOL-lsW0mJ0RxufTB4woOyd0zx31VuACzzxOAsvtg1knhWgugIkoFqy6OYzFjFWw-GXmzQNCx978_bG3igqUjGMy0qpteqFiCHzVDZapQiPhWkcrNNsSi_sehvQwENOudZEZDvDZTI07rOFy7OMB_mUckOvLC_KcqpRE1vdyXykBfscqyugA_nuQ1CeRpCxcdlEp_kP1YeJe6OK6NytqJ_tUg7-Wnd5QKN9sEnI4vugj-BXl_moSpLTedND5D5UnNpC1O62hwLvcsIb2pJGXZToCYmXBnGZ7IRG9sklNYqk-2bsVjZQ'
 }
 
 
@@ -46,6 +40,23 @@ class CastAgencyTestCase(unittest.TestCase):
             self.db.init_app(self.app)
             # create all tables
             self.db.create_all()
+
+        new_actor = {
+            'name': 'Test Name',
+            'age': 25,
+            'gender': 'Male'
+        }
+
+        res = self.client().post('/actors', json=new_actor,
+                                 headers=casting_director_header)
+
+        new_movie = {
+            'title': 'Test Movie',
+            'release_date': '2020-06-17'
+        }
+
+        res = self.client().post('/movies', json=new_movie,
+                                 headers=executive_producer_header)
 
     def tearDown(self):
         """Executed after reach test"""
@@ -78,7 +89,7 @@ class CastAgencyTestCase(unittest.TestCase):
             'name': 'John Smith',
             'gender': 'Male'
         }
-        res = self.client().patch('/actors/2', json=update_actor,
+        res = self.client().patch('/actors/1', json=update_actor,
                                   headers=casting_director_header)
         data = json.loads(res.data)
 
@@ -114,13 +125,13 @@ class CastAgencyTestCase(unittest.TestCase):
         self.assertEqual(data['message'], 'authentification failed')
 
     def test_delete_actors_by_id(self):
-        res = self.client().delete('/actors/2',
+        res = self.client().delete('/actors/1',
                                    headers=casting_director_header)
         data = json.loads(res.data)
 
         self.assertEqual(res.status_code, 200)
         self.assertTrue(data['success'])
-        self.assertEqual(data['deleted_actor'], 2)
+        self.assertEqual(data['deleted_actor'], 1)
 
     def test_400_delete_actors_by_id(self):
         res = self.client().delete('/actors/21234',
@@ -155,7 +166,7 @@ class CastAgencyTestCase(unittest.TestCase):
         self.assertEqual(res.status_code, 200)
         self.assertTrue(data['success'])
         self.assertTrue(data['new_actor'] > 0)
-        self.assertTrue(len(data['actors']) > 0)
+        self.assertTrue(data['actors'] > 0)
 
     def test_400_fail_to_add_actors(self):
         new_actor = {
@@ -191,7 +202,7 @@ class CastAgencyTestCase(unittest.TestCase):
         data = json.loads(res.data)
         self.assertEqual(res.status_code, 200)
         self.assertTrue(data['success'])
-        self.assertTrue(data['movies'] > 0)
+        self.assertTrue(len(data['movies']) > 0)
 
     def test_401_get_movies(self):
         res = self.client().get('/movies')
@@ -205,11 +216,10 @@ class CastAgencyTestCase(unittest.TestCase):
     def test_update_movies_by_id(self):
         update_movie = {
             'title': 'John Smith',
-            'release_date': date.today().__str__()
+            'release_date': date.today().isoformat()
         }
 
-        print(update_movie)
-        res = self.client().patch('/movies/2', json=update_movie,
+        res = self.client().patch('/movies/1', json=update_movie,
                                   headers=casting_director_header)
         data = json.loads(res.data)
 
@@ -220,9 +230,9 @@ class CastAgencyTestCase(unittest.TestCase):
     def test_400_fail_to_update_movies(self):
         update_movie = {
             'title': 'John Smith',
-            'release_date': date.today()
+            'release_date': date.today().isoformat()
         }
-        res = self.client().patch('/movies/2', json=update_movie,
+        res = self.client().patch('/movies/1999', json=update_movie,
                                   headers=casting_director_header)
         data = json.loads(res.data)
 
@@ -234,9 +244,9 @@ class CastAgencyTestCase(unittest.TestCase):
     def test_401_fail_to_update_movies(self):
         update_movie = {
             'title': 'John Smith',
-            'release_date': date.today()
+            'release_date': date.today().isoformat()
         }
-        res = self.client().patch('/moveis/2', json=update_movie,
+        res = self.client().patch('/movies/1', json=update_movie,
                                   headers=casting_assistant_header)
         data = json.loads(res.data)
 
@@ -245,13 +255,13 @@ class CastAgencyTestCase(unittest.TestCase):
         self.assertEqual(data['message'], 'authentification failed')
 
     def test_delete_movies_by_id(self):
-        res = self.client().delete('/movies/2',
+        res = self.client().delete('/movies/1',
                                    headers=executive_producer_header)
         data = json.loads(res.data)
 
         self.assertEqual(res.status_code, 200)
         self.assertTrue(data['success'])
-        self.assertEqual(data['deleted_movie'], 2)
+        self.assertEqual(data['deleted_movie'], 1)
 
     def test_400_delete_movies_by_id(self):
         res = self.client().delete('/movies/21234',
@@ -264,7 +274,7 @@ class CastAgencyTestCase(unittest.TestCase):
         self.assertEqual(data['message'], 'bad request')
 
     def test_401_fail_to_delete_movies(self):
-        res = self.client().delete('/movies/2',
+        res = self.client().delete('/movies/1',
                                    headers=casting_assistant_header)
         data = json.loads(res.data)
 
@@ -275,7 +285,7 @@ class CastAgencyTestCase(unittest.TestCase):
     def test_add_movies(self):
         new_movie = {
             'title': 'Inception 2',
-            'release_date': date.today()
+            'release_date': date.today().isoformat()
         }
 
         res = self.client().post('/movies', json=new_movie,
@@ -285,7 +295,7 @@ class CastAgencyTestCase(unittest.TestCase):
         self.assertEqual(res.status_code, 200)
         self.assertTrue(data['success'])
         self.assertTrue(data['new_movie'] > 0)
-        self.assertTrue(len(data['movies']) > 0)
+        self.assertTrue(data['movies'] > 0)
 
     def test_400_fail_to_add_movies(self):
         new_movie = {
@@ -303,7 +313,7 @@ class CastAgencyTestCase(unittest.TestCase):
     def test_401_fail_to_add_movies(self):
         new_movie = {
             'title': 'Inception 2',
-            'release_date': date.today()
+            'release_date': date.today().isoformat()
         }
 
         res = self.client().post('/movies', json=new_movie,
