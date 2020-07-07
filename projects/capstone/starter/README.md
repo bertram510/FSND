@@ -48,6 +48,7 @@ Use the following login:
 To run the server locally, make sure to change the `datapath` variable to `localhost:5432`(the commented out one), and then execute:
 
 ```bash
+source setup.sh
 export FLASK_APP=app
 export FLASK_ENV=development
 flask run
@@ -60,6 +61,7 @@ Setting the `FLASK_APP` variable to `flaskr` directs flask to use the `flaskr` d
 ## Testing
 To run the tests, run
 ```
+source setup.sh
 dropdb cast_agency_test
 createdb cast_agency_test
 python test_app.py
